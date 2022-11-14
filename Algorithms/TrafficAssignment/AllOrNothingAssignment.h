@@ -123,7 +123,7 @@ class AllOrNothingAssignment {
     output++;
     output--;
      //junjunjun
-     Measurebehavior measures;
+/*     Measurebehavior measures;
      if (output == 1 ) {
              std::string iteration;
          if (stats.numIterations == 1) {
@@ -133,10 +133,10 @@ class AllOrNothingAssignment {
          }
          auto anaFileName = fileName + "_measure";
 
-         measures.measures(anaFileName, inputGraph, trafficFlows, stats.numIterations);
+         measures.measures(anaFileName, odPairPath,inputGraph, trafficFlows, stats.numIterations);
 
 
-     }
+     }*/
 
  
 

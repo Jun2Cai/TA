@@ -9,7 +9,7 @@
 class IMeasure {
 public:
     template <typename InputGraph>
-     void measure(std::string anaFileName, InputGraph inputGraph, int numIterations) {
+     void measure(std::string anaFileName, std::map<std::string, std::vector<int32_t>> odPairPath, InputGraph inputGraph, int numIterations) {
         ;
     }
 
