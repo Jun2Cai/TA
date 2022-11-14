@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
+#include <limits>
 #include <csv.h>
 
 #include "DataStructures/Graph/Attributes/LengthAttribute.h"

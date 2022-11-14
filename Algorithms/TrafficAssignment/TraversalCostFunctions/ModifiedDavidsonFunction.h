@@ -10,7 +10,13 @@ template <typename GraphT>
 class ModifiedDavidsonFunction {
  public:
   // Constructs a modified Davidson function.
-  ModifiedDavidsonFunction(const GraphT& graph) : graph(graph), davidson(graph) {}
+  ModifiedDavidsonFunction(const GraphT& graph, double al, double be, double sc) : graph(graph), davidson(graph, al, be, sc) {
+      alpha = al;
+      beta = be;
+      scale = sc;
+  }
+
+
 
   // Returns the travel time on edge e, given the flow x on e.
   double operator()(const int e, const double x) const {
@@ -64,4 +70,7 @@ class ModifiedDavidsonFunction {
  private:
   const GraphT& graph;               // The graph on whose edges we operate.
   DavidsonFunction<GraphT> davidson; // The original Davidson function.
+  double alpha;
+  double beta;
+  double scale;
 };

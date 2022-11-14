@@ -23,24 +23,21 @@ public:
     // Returns the travel cost on edge e, given the flow x on e.
     double operator()(const int e, const double x) const {
         assert(x >= 0);
-        double y = x / graph.capacity(e);
-        return scale * graph.length(e) * (beta / (y + 1) + alpha) + (1-scale) * graph.travelTime(e);
+        return scale * graph.length(e) * (beta / (x + 1) + alpha) + (1-scale) * graph.travelTime(e);
     }
 
     // Returns the derivative of e's travel cost function at x.
     double derivative(const int e, const double x) const {
         assert(x >= 0);
-        double y = x / graph.capacity(e);
-        const double tmp = y + 1;
-        return scale * graph.length(e) * -beta / (tmp * tmp);
+        const double tmp = x + 1;
+        return scale * graph.length(e) * -beta / (tmp * tmp) ;
     }
 
     // Returns the second derivative of e's travel cost function at x.
     double secondDerivative(const int e, const double x) const {
         assert(x >= 0);
-        double y = x / graph.capacity(e);
-        const double tmp = y + 1;
-        return scale * graph.length(e) * 2 * beta / (tmp * tmp * tmp);
+        const double tmp = x + 1;
+        return scale * graph.length(e) * 2 * beta / (tmp * tmp * tmp)   ;
     }
 
 

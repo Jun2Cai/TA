@@ -1,4 +1,4 @@
-add_executable(AssignTraffic AssignTraffic.cc)
+add_executable(AssignTraffic AssignTraffic.cc ../Algorithms/TrafficAssignment/MeasureBehavior/Measurebehavior.h ../Algorithms/TrafficAssignment/Measurement/IMeasure.h ../Algorithms/TrafficAssignment/Measurement/LongestSubPathMeasure.h ../Algorithms/TrafficAssignment/Measurement/PercentageOfDifferentSat.h ../Algorithms/TrafficAssignment/TraversalCostFunctions/DecreasingFunction/VehiclesFunction.h ../Algorithms/TrafficAssignment/TraversalCostFunctions/DecreasingFunction/DelayedFunction.h ../Algorithms/TrafficAssignment/Measurement/CompareTravelTime.h ../Algorithms/TrafficAssignment/Measurement/IncreasedFlow.h)
 target_compile_definitions(AssignTraffic PRIVATE CSV_IO_NO_THREAD)
 target_link_libraries(AssignTraffic ${RoutingKit_LIBRARY})
 if(OpenMP_FOUND)

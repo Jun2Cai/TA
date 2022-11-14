@@ -2,18 +2,18 @@
 // Created by junjun on 30.09.22.
 //
 
-#ifndef ROUTINGFRAMEWORK_MEASURE_H
-#define ROUTINGFRAMEWORK_MEASURE_H
+#ifndef ROUTINGFRAMEWORK_IMEASURE_H
+#define ROUTINGFRAMEWORK_IMEASURE_H
 
 
-class Measure {
+class IMeasure {
 public:
     template <typename InputGraph>
-    void measure(std::string anaFileName,std::map<std::string, std::vector<int32_t>> odPairPath, InputGraph inputGraph, AlignedVector<int> trafficFlows) {
+     void measure(std::string anaFileName, InputGraph inputGraph, int numIterations) {
         ;
     }
 
 };
 
 
-#endif //ROUTINGFRAMEWORK_MEASURE_H
+#endif //ROUTINGFRAMEWORK_IMEASURE_H

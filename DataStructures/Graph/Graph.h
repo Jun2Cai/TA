@@ -203,6 +203,8 @@ class Graph<VertexAttrs<VertexAttributes...>, EdgeAttrs<EdgeAttributes...>, dyna
     return edgeHeads[e];
   }
 
+
+
   // Returns the value of the attribute Attr for the vertex/edge with index idx.
   template <typename Attr>
   const typename Attr::Type& get(const int idx) const {

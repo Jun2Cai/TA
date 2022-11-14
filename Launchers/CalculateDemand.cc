@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
+#include <limits>
 #include <csv.h>
 
 #include "Algorithms/CCH/CCH.h"

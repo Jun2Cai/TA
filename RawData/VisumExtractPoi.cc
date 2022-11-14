@@ -5,7 +5,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
-
+#include <limits>
 #include <csv.h>
 
 #include "DataStructures/Geometry/CoordinateTransformation.h"

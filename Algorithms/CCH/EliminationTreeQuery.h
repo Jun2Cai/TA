@@ -136,6 +136,20 @@ class EliminationTreeQuery {
     assert(tentativeDistances[i] != INFTY);
     return reverseSearch.getReverseEdgePath(meetingVertices.vertex(i), i);
   }
+    // Returns the vertices in the upward graph on the up segment of the up-down path (in reverse order).
+    const std::vector<int32_t>& getUpPath(const int i = 0) {
+        assert(tentativeDistances[i] != INFTY);
+        return forwardSearch.getReversePath(meetingVertices.vertex(i), i);
+    }
+
+    // Returns the vertices in the downward graph on the down segment of the up-down path.
+    const std::vector<int32_t>& getDownPath(const int i = 0) {
+        assert(tentativeDistances[i] != INFTY);
+        return reverseSearch.getReversePath(meetingVertices.vertex(i), i);
+    }
+
+
+
 
  private:
   // Checks whether the path via v improves the tentative distance for any search.

@@ -10,11 +10,19 @@ template <typename GraphT>
 class DavidsonFunction {
  public:
   // Constructs a Davidson function.
-  DavidsonFunction(const GraphT& graph) : graph(graph) {}
+  DavidsonFunction(const GraphT& graph, double al, double be, double sc) : graph(graph) {
+      alpha = al;
+      beta = be;
+      scale = sc;
+  }
 
-  // Returns the travel time on edge e, given the flow x on e.
+
+    // Returns the travel time on edge e, given the flow x on e.
   double operator()(const int e, const double x) const {
     assert(x >= 0); assert(x < graph.capacity(e));
+    if((graph.travelTime(e) * (1 + 0.01 * x / (graph.capacity(e) - x)) <= 0)) {
+       return graph.travelTime(e) * 5;
+    }
     return graph.travelTime(e) * (1 + 0.01 * x / (graph.capacity(e) - x));
   }
 
@@ -61,4 +69,7 @@ class DavidsonFunction {
 
  private:
   const GraphT& graph; // The graph on whose edges we operate.
+  double alpha;
+  double beta;
+  double scale;
 };

@@ -7,9 +7,16 @@ template <typename GraphT>
 class BprFunction {
  public:
   // Constructs a BPR function.
-  BprFunction(const GraphT& graph) : graph(graph) {}
+  BprFunction(const GraphT& graph, double al, double be, double sc) : graph(graph) {
+      alpha = al;
+      beta = be;
+      scale = sc;
+  }
 
-  // Returns the travel time on edge e, given the flow x on e.
+
+
+
+    // Returns the travel time on edge e, given the flow x on e.
   double operator()(const int e, const double x) const {
     const double tmp = x / graph.capacity(e);
     return graph.travelTime(e) * (1 + 1 * tmp * tmp);
@@ -53,4 +60,7 @@ class BprFunction {
 
  private:
   const GraphT& graph; // The graph on whose edges we operate.
+  double alpha;
+  double beta;
+  double scale;
 };

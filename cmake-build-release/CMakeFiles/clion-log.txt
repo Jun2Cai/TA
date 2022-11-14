@@ -1,0 +1,17 @@
+/home/junjun/Desktop/clion/clion/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/home/junjun/Desktop/clion/clion/bin/ninja/linux/ninja -G Ninja -S /home/junjun/Desktop/BA/BARepo/routing -B /home/junjun/Desktop/BA/BARepo/routing/cmake-build-release
+CMake Warning at /usr/lib/x86_64-linux-gnu/cmake/CGAL/CGALConfig.cmake:92 (message):
+  CGAL_DATA_DIR cannot be deduced, set the variable CGAL_DATA_DIR to set the
+  default value of CGAL::data_file_path()
+Call Stack (most recent call first):
+  CMakeLists.txt:43 (find_package)
+
+
+-- Using header-only CGAL
+-- Targetting Ninja
+-- Using /usr/bin/c++ compiler.
+-- Boost include dirs: /usr/include
+-- Boost libraries:    
+-- Using gcc version 4 or later. Adding -frounding-math
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/junjun/Desktop/BA/BARepo/routing/cmake-build-release

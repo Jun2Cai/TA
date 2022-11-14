@@ -7,6 +7,8 @@
 
 #include "Algorithms/TrafficAssignment/Measurement/PercentageOfDifferentSat.h"
 #include "Algorithms/TrafficAssignment/Measurement/LongestSubPathMeasure.h"
+#include "Algorithms/TrafficAssignment/Measurement/CompareTravelTime.h"
+#include "Algorithms/TrafficAssignment/Measurement/IncreasedFlow.h"
 
 
 class Measurebehavior {
@@ -14,11 +16,20 @@ class Measurebehavior {
 
 public:
     template <typename InputGraph>
-    void measures(std::string anaFileName,std::map<std::string, std::vector<int32_t>> odPairPath, InputGraph inputGraph, AlignedVector<int> trafficFlows, int numIterations) {
-        PercentageOfDifferentSat percentageOfDifferentSat;
-        percentageOfDifferentSat.measure(anaFileName, odPairPath, inputGraph, trafficFlows, numIterations);
+    void measures(std::string anaFileName, InputGraph inputGraph, AlignedVector<int> trafficFlows, int numIterations) {
+/*        PercentageOfDifferentSat percentageOfDifferentSat;
+        percentageOfDifferentSat.setTrafficFlows(trafficFlows);
+        percentageOfDifferentSat.measure(anaFileName, odPairPath, inputGraph,  numIterations);
         LongestSubPathMeasure longestSubPathMeasure;
+        longestSubPathMeasure.setTrafficFlows(trafficFlows);
         longestSubPathMeasure.measure(anaFileName, odPairPath, inputGraph, trafficFlows, numIterations);
+        CompareTravelTime compareTravelTime;
+        compareTravelTime.measure(anaFileName, odPairPath, inputGraph,  numIterations);*/
+        ;
+        IncreasedFlow increasedFlow;
+        increasedFlow.setTrafficFlows(trafficFlows);
+        increasedFlow.measure(anaFileName, inputGraph, numIterations);
+
     }
 
 

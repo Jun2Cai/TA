@@ -8,7 +8,7 @@
 #include <iostream>
 #include <ostream>
 #include <vector>
-
+#include "Algorithms/TrafficAssignment/MeasureBehavior/Measurebehavior.h"
 #include "DataStructures/Utilities/OriginDestination.h"
 #include "Stats/TrafficAssignment/AllOrNothingAssignmentStats.h"
 #include "Tools/CommandLine/ProgressBar.h"
@@ -43,13 +43,13 @@ class AllOrNothingAssignment {
   }
 
   // Assigns all OD flows to their currently shortest paths.
-  void run(const int skipInterval = 1) {
+  void run(const int skipInterval = 1, int origin = 0, int destination = 0, int output = 0,std::string fileName = "") {
     Timer timer;
     ++stats.numIterations;
     if (verbose) std::cout << "Iteration " << stats.numIterations << ": " << std::flush;
     shortestPathAlgo.customize();
     stats.lastCustomizationTime = timer.elapsed();
-
+    std::map<std::string, std::vector<int32_t>> odPairPath;
     timer.restart();
     ProgressBar bar(std::ceil(1.0 * odPairs.size() / (K * skipInterval)), verbose);
     trafficFlows.assign(inputGraph.numEdges(), 0);
@@ -76,7 +76,15 @@ class AllOrNothingAssignment {
           sources[k] = odPairs[i + k * skipInterval].origin;
           targets[k] = odPairs[i + k * skipInterval].destination;
         }
-        queryAlgo.run(sources, targets, k);
+        queryAlgo.run(sources, targets, k, odPairPath);
+
+
+
+
+
+
+
+
 
         for (auto j = 0; j < k; ++j) {
           // Maintain the avg and max change in the OD distances between the last two iterations.
@@ -103,14 +111,46 @@ class AllOrNothingAssignment {
         stats.maxChangeInDistances = std::max(stats.maxChangeInDistances, maxChange);
         totalNumPairsSampledBefore += numPairsSampledBefore;
       }
+
     }
     bar.finish();
 
-    shortestPathAlgo.propagateFlowsToInputEdges(trafficFlows);
+    shortestPathAlgo.propagateFlowsToInputEdges(trafficFlows); 
     std::for_each(trafficFlows.begin(), trafficFlows.end(), [&](int& f) { f *= skipInterval; });
     stats.lastQueryTime = timer.elapsed();
     stats.avgChangeInDistances /= totalNumPairsSampledBefore;
     stats.finishIteration();
+    output++;
+    output--;
+     //junjunjun
+     Measurebehavior measures;
+     if (output == 1 ) {
+             std::string iteration;
+         if (stats.numIterations == 1) {
+             iteration = "first";
+         } else {
+             iteration = "last";
+         }
+         auto anaFileName = fileName + "_measure";
+
+         measures.measures(anaFileName, inputGraph, trafficFlows, stats.numIterations);
+
+
+     }
+
+ 
+
+/*
+     if (the path of the certain odPair exists) {
+         outputtheodpair
+     }
+*/    auto odFileName = fileName + "_" + std::to_string(origin) + "_" + std::to_string(destination) + "_" + std::to_string(stats.numIterations);
+      outputOdPairPath(origin, destination,odFileName, odPairPath);
+
+
+
+
+
 
     if (verbose) {
       std::cout << " done.\n";
@@ -120,7 +160,203 @@ class AllOrNothingAssignment {
       std::cout << "  Routing: " << stats.lastRoutingTime << "ms\n";
       std::cout << std::flush;
     }
+
+
+
+
+
   }
+
+/*
+  void meanMeasure(std::string anaFileName,std::map<std::string, std::vector<int32_t>> odPairPath) {
+
+          std::ofstream odAnaFile;
+          odAnaFile.open(anaFileName+"_mean.csv");
+          odAnaFile << "origin,destination,0_20,20_40,40_60,60_80,80_100,,0_20,20_40,40_60,60_80,80_100"<<std::endl;
+          double sumOfSatInCount0 = 0;
+          double sumOfSatInLength0 = 0;
+          double sumOfSatInCount1 = 0;
+          double sumOfSatInLength1 = 0;
+          double sumOfSatInCount2 = 0;
+          double sumOfSatInLength2 = 0;
+          double sumOfSatInCount3 = 0;
+          double sumOfSatInLength3 = 0;
+          double sumOfSatInCount4 = 0;
+          double sumOfSatInLength4 = 0;
+          int sumOfMeaningfulPair = 0;
+
+          for(auto iter = odPairPath.begin(); iter != odPairPath.end(); iter++) {
+              auto pair = iter -> first;
+              auto path = iter -> second;
+              odAnaFile << pair << ",";
+
+              int sat0 = 0;
+              int sat1 = 0;
+              int sat2 = 0;
+              int sat3 = 0;
+              int sat4 = 0;
+
+              int totalLength = 0;
+              int len0 = 0;
+              int len1 = 0;
+              int len2 = 0;
+              int len3 = 0;
+              int len4 = 0;
+
+
+
+              for(auto e : path) {
+                  if (path.size() > 0) {
+                  auto vol = trafficFlows[e];
+                  auto sat = (double)vol / (double)inputGraph.capacity(e);
+                  if (sat >=0 && sat <0.2) {
+                      sat0++;
+                      len0 += inputGraph.length(e);
+                      totalLength += inputGraph.length(e);
+
+                  } else if (sat >= 0.2 && sat < 0.4) {
+                      sat1++;
+                      len1 += inputGraph.length(e);
+                      totalLength += inputGraph.length(e);
+                  } else if (sat >= 0.4 && sat < 0.6) {
+                      sat2++;
+                      len2 += inputGraph.length(e);
+                      totalLength += inputGraph.length(e);
+                  } else if (sat >= 0.6 && sat < 0.8) {
+                      sat3++;
+                      len3 += inputGraph.length(e);
+                      totalLength += inputGraph.length(e);
+                  } else if (sat > 0.8) {
+                      sat4++;
+                      len4 += inputGraph.length(e);
+                      totalLength += inputGraph.length(e);
+                  }
+              }}
+
+
+
+              double size = (double)path.size();
+              double length = (double)totalLength ;
+
+
+              if (size > 0 && length  > 0) {
+                  sumOfMeaningfulPair++;
+                  odAnaFile << sat0/size << "," << sat1/size << "," <<sat2/size << ","<<sat3/size << ","<<sat4/size << ",,"<<
+                            len0/length << ","<< len1/length  << ","<< len2/length << ","<< len3/length << ","<< len4/length <<std::endl;
+                  sumOfSatInCount0 += sat0/size;
+                  sumOfSatInCount1 += sat1/size;
+                  sumOfSatInCount2 += sat2/size;
+                  sumOfSatInCount3 += sat3/size;
+                  sumOfSatInCount4 += sat4/size;
+                  sumOfSatInLength0 += len0/length;
+                  sumOfSatInLength1 += len1/length;
+                  sumOfSatInLength2 += len2/length;
+                  sumOfSatInLength3 += len3/length;
+                  sumOfSatInLength4 += len4/length;
+              }
+
+
+          }
+
+          odAnaFile << "mean,," << sumOfSatInCount0/sumOfMeaningfulPair <<","<< sumOfSatInCount1/sumOfMeaningfulPair <<","<< sumOfSatInCount2/sumOfMeaningfulPair << "," <<  sumOfSatInCount3/sumOfMeaningfulPair << "," << sumOfSatInCount4/sumOfMeaningfulPair<<
+                    ","<< "mean" << "," << sumOfSatInLength0/sumOfMeaningfulPair<<","<< sumOfSatInLength1/sumOfMeaningfulPair<<","<< sumOfSatInLength2/sumOfMeaningfulPair<<","<< sumOfSatInLength3/sumOfMeaningfulPair<<","<< sumOfSatInLength4/sumOfMeaningfulPair<<std::endl;
+
+      }
+
+    void longestSubPathMeasure(std::string anaFileName,std::map<std::string, std::vector<int32_t>> odPairPath)  {
+        std::ofstream odAnaFile;
+        odAnaFile.open(anaFileName+"_longestSubPath.csv");
+        odAnaFile << "origin,destination,longest continuous sub-path"<<std::endl;
+        for(auto iter = odPairPath.begin(); iter != odPairPath.end(); iter++) {
+            auto pair = iter->first;
+            auto path = iter->second;
+
+
+
+            if (path.size() > 0) {
+                odAnaFile << pair << ",";
+                int longestCount= 0;
+                int temp = 0;
+                for(auto e : path) {
+                    auto vol = trafficFlows[e];
+                    auto sat = (double)vol / (double)inputGraph.capacity(e);
+
+                    if (sat > 0.8) {
+                        temp++;
+                        if (temp > longestCount) {
+                            longestCount = temp;
+                        }
+                    } else {
+                        temp = 0;
+                    }
+
+
+                }
+
+
+                odAnaFile  << longestCount << std::endl;
+            }
+
+
+
+
+
+        }
+  }*/
+
+  void outputOdPairPath(int origin, int destination, std::string fileName, std::map<std::string, std::vector<int32_t>> odPairPath) {
+      auto key = std::to_string(origin)+","+std::to_string(destination);
+      if (odPairPath.count(key) > 0) {
+          std::vector<int32_t> path = odPairPath[key];
+          if (path.size() > 0) {
+
+              //outputs origin-destination path in json-file
+              std::ofstream odFile;
+              auto odFileName =
+                      fileName + ".json";
+
+              odFile.open(odFileName);
+              odFile << "{\"type\" : \"FeatureCollection\" ," << std::endl;
+              odFile << "\"features\" : [{" << std::endl;
+              odFile << "\"type\" : \"Feature\"," << std::endl;
+              odFile << "\"properties\" : {\"stroke\" : \"#" << "FF0000" << "\" } ," << std::endl;
+
+              odFile << "\"geometry\" : {\"type\":\"MultiLineString\",\"coordinates\":" << std::endl;
+              odFile << "[";
+              odFile << "[[" << inputGraph.LatLngAttribute::latLng(origin).lngInDeg() << ","
+                     << inputGraph.LatLngAttribute::latLng(origin).latInDeg() << "],";
+              odFile <<"["<<inputGraph.LatLngAttribute::latLng(inputGraph.edgeHead(path.front())).lngInDeg() << ","
+                     << inputGraph.LatLngAttribute::latLng(inputGraph.edgeHead(path.front())).latInDeg() << "]]";
+              for (int i = 0; i < path.size() - 1; i++) {
+                  int tail = inputGraph.edgeHead(path.at(i));
+                  int head = inputGraph.edgeHead(path.at(i+1));
+                  odFile <<", " << "[[" << inputGraph.LatLngAttribute::latLng(tail).lngInDeg() << ","
+                         << inputGraph.LatLngAttribute::latLng(tail).latInDeg() << "], ";
+                  odFile <<"[" << inputGraph.LatLngAttribute::latLng(head).lngInDeg() << ","
+                         << inputGraph.LatLngAttribute::latLng(head).latInDeg() << "]] ";
+
+              }
+
+              odFile << "] }} , { ";
+              //mark origin
+              odFile << "\"type\" : \"Feature\"," << std::endl;
+              odFile << "\"properties\" : {\"stroke\" : \"#" << "000000" << "\" } ," << std::endl;
+
+              odFile << "\"geometry\" : {\"type\":\"Point\",\"coordinates\":" << std::endl;
+              odFile << "["<< inputGraph.LatLngAttribute::latLng(origin).lngInDeg() << ","
+                     << inputGraph.LatLngAttribute::latLng(origin).latInDeg() << "]";
+
+              odFile << "}}]}";
+
+          }
+          }
+      }
+
+
+
+
+
+
 
   // Returns the traffic flow on edge e.
   const int& trafficFlowOn(const int e) const {
