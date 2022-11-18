@@ -9,6 +9,7 @@
 #include <ostream>
 #include <vector>
 #include "Algorithms/TrafficAssignment/MeasureBehavior/Measurebehavior.h"
+#include "Algorithms/TrafficAssignment/Measurement/StaticalFunction.h"
 #include "DataStructures/Utilities/OriginDestination.h"
 #include "Stats/TrafficAssignment/AllOrNothingAssignmentStats.h"
 #include "Tools/CommandLine/ProgressBar.h"
@@ -122,6 +123,20 @@ class AllOrNothingAssignment {
     stats.finishIteration();
     output++;
     output--;
+    //test
+ /*   std::vector<int> test = {0,1,3,2,4,5,6,7,8,9,10};
+    auto testValue = StaticalFunction::weightedQuantile(test, inputGraph, trafficFlows);
+    for (int i = 0; i < 11; i++) {
+        std::cout << "flow " << trafficFlows[i] << std::endl;
+    }
+
+      for (int i = 0; i < 11; i++) {
+          std::cout << "time " << inputGraph.travelTime(i) << std::endl;
+      }
+    for(auto v : testValue) {
+        std::cout << "quantia" << v << std::endl;
+    }*/
+
      //junjunjun
 /*     Measurebehavior measures;
      if (output == 1 ) {
@@ -140,11 +155,7 @@ class AllOrNothingAssignment {
 
  
 
-/*
-     if (the path of the certain odPair exists) {
-         outputtheodpair
-     }
-*/    auto odFileName = fileName + "_" + std::to_string(origin) + "_" + std::to_string(destination) + "_" + std::to_string(stats.numIterations);
+    auto odFileName = fileName + "_" + std::to_string(origin) + "_" + std::to_string(destination) + "_" + std::to_string(stats.numIterations);
       outputOdPairPath(origin, destination,odFileName, odPairPath);
 
 

@@ -1,13 +1,14 @@
 # ninja log v5
 2	77	1664548671134765377	Launchers/CMakeFiles/AssignTraffic.dir/__/Algorithms/TrafficAssignment/Measurement/Measurement.cpp.o	2391d02beb26ff12
 0	6151	1657118376330309050	RawData/CMakeFiles/GenerateODPairs.dir/GenerateODPairs.cc.o	e8b1d228f9b3c46f
-0	141	1668439605741931382	build.ninja	ccf2e6d3865dd90f
+0	135	1668786833285187886	build.ninja	ccf2e6d3865dd90f
 2	1352	1664550762792042849	Launchers/CMakeFiles/AssignTraffic.dir/__/Algorithms/TrafficAssignment/Measurement/IMeasurement.cpp.o	e0af9067750f2ed8
-1	45407	1668439548678000242	Launchers/CMakeFiles/AssignTraffic.dir/AssignTraffic.cc.o	ccd80302b43c5553
+1	30447	1668449353133032586	Launchers/CMakeFiles/AssignTraffic.dir/AssignTraffic.cc.o	ccd80302b43c5553
 6158	6288	1657118376466309056	RawData/GenerateODPairs	eab0f1588a263937
-45408	45535	1668439548806000078	Launchers/AssignTraffic	15cce8508c75a57
-0	135	1668439605741931382	build.ninja	ccf2e6d3865dd90f
-1	41928	1668439647693885633	Launchers/CMakeFiles/AssignTraffic.dir/AssignTraffic.cc.o	ccd80302b43c5553
-41928	42316	1668439648081885228	Launchers/AssignTraffic	15cce8508c75a57
-5	20721	1668439758625782052	Launchers/CMakeFiles/AssignTraffic.dir/AssignTraffic.cc.o	ccd80302b43c5553
-20722	20947	1668439758857781858	Launchers/AssignTraffic	15cce8508c75a57
+30449	30699	1668449353381156598	Launchers/AssignTraffic	15cce8508c75a57
+5	18017	1668787638313904136	Launchers/CMakeFiles/AssignTraffic.dir/AssignTraffic.cc.o	ccd80302b43c5553
+18018	18146	1668787638441902292	Launchers/AssignTraffic	15cce8508c75a57
+1	18898	1668787919737280722	Launchers/CMakeFiles/AssignTraffic.dir/AssignTraffic.cc.o	ccd80302b43c5553
+18899	19006	1668787919845278767	Launchers/AssignTraffic	15cce8508c75a57
+5	23081	1668788279254258674	Launchers/CMakeFiles/AssignTraffic.dir/AssignTraffic.cc.o	ccd80302b43c5553
+23082	23234	1668788279406255534	Launchers/AssignTraffic	15cce8508c75a57
