@@ -1,0 +1,43 @@
+static std::map<std::string, vector<int>> quanInFstIter;
+if (numIteration == 1) {
+for (auto iter = odPairPath.begin(); iter != odPairPath.end(); iter++) {
+auto pair = iter->first;
+auto path = iter->second;
+ if (path.size() > 0) {
+quanInFstIter[pair] = StaticalFunction::getQuantile(path, inputGraph, trafficFlows); }
+  }
+} else {
+double sumMin = 0;
+double sum25 = 0;
+double sum50 = 0;
+double sum75 = 0;
+double sumMax = 0;
+int cout = 0;
+odAnaFile.open(anaFileName+"_QuantileRatio.csv")
+  for (auto iter = odPairPath.begin(); iter != odPairPath.end(); iter++) {
+auto pair = iter->first;
+auto path = iter->second;
+if (path.size()>0 &&quanInFstIter.find(key)]) {
+odAnaFile << pair << ",";
+double ratioMin = StaticalFunction::getQuantile(path, inputGraph, trafficFlows).at(4)/quanInFstIter[pair].at(0);
+double ratio25 = StaticalFunction::getQuantile(path, inputGraph, trafficFlows).at(4)/quanInFstIter[pair].at(1);
+double ratio50 = StaticalFunction::getQuantile(path, inputGraph, trafficFlows).at(4)/quanInFstIter[pair].at(2);
+double ratio75 = StaticalFunction::getQuantile(path, inputGraph, trafficFlows).at(4)/quanInFstIter[pair].at(3);
+double ratioMax = StaticalFunction::getQuantile(path, inputGraph, trafficFlows).at(4)/quanInFstIter[pair].at(4);
+meanMin += ratioMin;
+mean25 += ratio25;
+mean50 += ratio50;
+mean75 += ratio75;
+meanMax += ratioMax;
+cout++;
+odAnaFile <<  ratioMin << "," << ratio25 << "," << ratio50 << "," << ratio75 << ratioMax << std::endl;
+
+      }
+
+   }
+odAnaFile << "," << std::endl;
+odAnaFile <<  sumMin/cout*1.0 << "," <<  sum25/cout*1.0 << "," <<  sum50/cout*1.0 << "," <<  sum75/cout*1.0 ;
+
+
+}
+
