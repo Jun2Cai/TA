@@ -124,7 +124,7 @@ class AllOrNothingAssignment {
     output++;
     output--;
     //test
- /*   std::vector<int> test = {0,1,3,2,4,5,6,7,8,9,10};
+/*    std::vector<int> test = {0,1,3,2,4,5,6,7,8,9,10};
     auto testValue = StaticalFunction::weightedQuantile(test, inputGraph, trafficFlows);
     for (int i = 0; i < 11; i++) {
         std::cout << "flow " << trafficFlows[i] << std::endl;
@@ -138,7 +138,7 @@ class AllOrNothingAssignment {
     }*/
 
      //junjunjun
-/*     Measurebehavior measures;
+     Measurebehavior measures;
      if (output == 1 ) {
              std::string iteration;
          if (stats.numIterations == 1) {
@@ -151,9 +151,8 @@ class AllOrNothingAssignment {
          measures.measures(anaFileName, odPairPath,inputGraph, trafficFlows, stats.numIterations);
 
 
-     }*/
+     }
 
- 
 
     auto odFileName = fileName + "_" + std::to_string(origin) + "_" + std::to_string(destination) + "_" + std::to_string(stats.numIterations);
       outputOdPairPath(origin, destination,odFileName, odPairPath);

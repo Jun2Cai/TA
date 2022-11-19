@@ -7,6 +7,7 @@
 
 
 #include "Algorithms/TrafficAssignment/Measurement/CompareTravelTime.h"
+#include "Algorithms/TrafficAssignment/Measurement/QuantileRatio.h"
 
 
 
@@ -16,7 +17,8 @@ class Measurebehavior {
 public:
     template <typename InputGraph>
     void measures(std::string anaFileName, std::map<std::string, std::vector<int32_t>> odPairPath, InputGraph inputGraph, AlignedVector<int> trafficFlows, int numIterations) {
-    ;
+    QuantileRatio quantileRatio;
+    quantileRatio.template measure(anaFileName,odPairPath,inputGraph,trafficFlows,numIterations);
 
     }
 

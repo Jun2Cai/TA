@@ -16,11 +16,13 @@ public :
      template <typename InputGraph>
       static std::vector<int32_t> weightedQuantile(std::vector<int32_t> path, InputGraph inputGraph, AlignedVector<int> trafficFlows) {
       std::vector<int32_t> quantile;
+      quantile.resize(100);
       //flow, travelTime, edge
-      std::vector<std::tuple<int, int, int32_t>> infoOfEachE;
+      std::vector<std::pair<int,int>> infoOfEachE;
       int totalTime = 0;
       for (auto e : path) {
-          infoOfEachE.push_back((std::make_tuple(trafficFlows[e], inputGraph.travelTime(e), e)));
+          std::pair<int,int> pair(trafficFlows[e], inputGraph.travelTime(e));
+          infoOfEachE.push_back(pair);
           totalTime += inputGraph.travelTime(e);
       }
 
@@ -34,6 +36,7 @@ public :
       quantile.push_back(getQuantile(infoOfEachE,quantile50));
       quantile.push_back(getQuantile(infoOfEachE,quantile75));
       quantile.push_back(std::get<0>(infoOfEachE.back()));
+      quantile.push_back(1);
 
 
 
@@ -42,7 +45,7 @@ public :
 }
 
 private:
-    static int getQuantile(std::vector<std::tuple<int, int, int32_t>> infoOfEachE, int quantileValue) {
+    static int getQuantile(std::vector<std::pair<int,int>> infoOfEachE, int quantileValue) {
         int tmp = 0;
         for (auto sorted: infoOfEachE) {
             tmp += std::get<1>(sorted);
