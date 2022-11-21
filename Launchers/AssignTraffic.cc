@@ -61,8 +61,7 @@ inline void printUsage() {
               "  -g <file>         network in binary format\n"
               "  -d <file>         OD pairs to be assigned onto the network\n"
               "  -file <file>      place the information after each iteration in <file>\n"
-              "  -origin                                  \n"
-              "  -destination                              \n"
+              "  -odPairIdForDetailedOutput <id>                                 \n"
               "  -help             display this help and exit\n";
 }
 
@@ -183,8 +182,7 @@ inline void assignTraffic(const CommandLineParser& clp) {
     const auto alpha = clp.getValue<double>("alpha", 0.85);
     const auto beta = clp.getValue<double>("beta", 155);
     const auto scale = clp.getValue<double>("scale", 1.0);
-    const auto origin = clp.getValue<int>("origin", 0);
-    const auto destination = clp.getValue<int>("destination", 0);
+    const auto odPairIdForDetailedOutput = clp.getValue<int>("odPairIdForDetailedOutput", -1);
     auto fileName = clp.getValue<std::string>("file") + "/"+std::to_string(alpha).substr(0,3) + "_" + std::to_string(beta).substr(0,4) + "_"+std::to_string(scale).substr(0,3);
     auto flowFileName = fileName +"_info_" + "flow";
     auto distFileName = fileName + "_info_" + "dist";
@@ -355,7 +353,7 @@ inline void assignTraffic(const CommandLineParser& clp) {
         statFile << std::flush;
     }
 
-    fwAssignment.run(flowFile, distFile, statFile, numIterations, outputIntermediates,fileName,origin, destination);
+    fwAssignment.run(flowFile, distFile, statFile, numIterations, outputIntermediates,fileName,odPairIdForDetailedOutput);
 
 }
 

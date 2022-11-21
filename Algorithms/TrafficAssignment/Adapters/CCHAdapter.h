@@ -61,97 +61,15 @@ class CCHAdapter {
       }*/
 
     // Computes shortest paths from each source to its target simultaneously.
-    void run(std::array<int, K>& sources, std::array<int, K>& targets, const int k, std::map<std::string, std::vector<int32_t>>& odPairPath = (std::map<std::string, std::vector<int32_t>>&) "0X000000000000") {
-       // int mark = -1;
+    template<typename ODPathIteratorT>
+    void run(std::array<int, K>& sources, std::array<int, K>& targets, const int k, const ODPathIteratorT& firstODPath) {
+
        // Run a centralized CH search.
       for (auto i = 0; i < K; ++i) {
-/*          if (sources[i] == origin && targets[i] == destination){
-              mark = i;
-         }*/
-
         sources[i] = minimumWeightedCH.rank(sources[i]);
         targets[i] = minimumWeightedCH.rank(targets[i]);
       }
       search.run(sources, targets);
-
-
-
-
-
-        /*     static int iteration = 0;
-            // outputs the certain od-pair path
-           if(mark > 0 && output <= 1) {
-
-
-                auto getUp = search.getUpEdgePath(mark);
-                auto getDown = search.getDownEdgePath(mark);
-
-                std::vector<int32_t> path;
-                CHPathUnpacker unpacker(minimumWeightedCH);
-                unpacker.unpackUpDownPath(getUp, getDown, path);
-
-                if (path.size() > 0) {
-
-                    //outputs origin-destination path in json-file
-                    std::ofstream odFile;
-                    iteration++;
-                    auto odFileName =
-                            fileName + "origin_" + std::to_string(origin) + "_destination" + std::to_string(destination)  +"_" + std::to_string(iteration) +
-                            ".json";
-
-                    odFile.open(odFileName);
-                    odFile << "{\"type\" : \"FeatureCollection\" ," << std::endl;
-                    odFile << "\"features\" : [{" << std::endl;
-                    odFile << "\"type\" : \"Feature\"," << std::endl;
-                    odFile << "\"properties\" : {\"stroke\" : \"#" << "FF0000" << "\" } ," << std::endl;
-
-                    odFile << "\"geometry\" : {\"type\":\"MultiLineString\",\"coordinates\":" << std::endl;
-                    odFile << "[";
-                    odFile << "[[" << inputGraph.LatLngAttribute::latLng(origin).lngInDeg() << ","
-                           << inputGraph.LatLngAttribute::latLng(origin).latInDeg() << "],";
-                    odFile <<"["<<inputGraph.LatLngAttribute::latLng(inputGraph.edgeHead(path.front())).lngInDeg() << ","
-                           << inputGraph.LatLngAttribute::latLng(inputGraph.edgeHead(path.front())).latInDeg() << "]]";
-                    for (int i = 0; i < path.size() - 1; i++) {
-                        int tail = inputGraph.edgeHead(path.at(i));
-                        int head = inputGraph.edgeHead(path.at(i+1));
-                        odFile <<", " << "[[" << inputGraph.LatLngAttribute::latLng(tail).lngInDeg() << ","
-                                              << inputGraph.LatLngAttribute::latLng(tail).latInDeg() << "], ";
-                        odFile <<"[" << inputGraph.LatLngAttribute::latLng(head).lngInDeg() << ","
-                               << inputGraph.LatLngAttribute::latLng(head).latInDeg() << "]] ";
-
-                    }
-
-                    odFile << "] }} , { ";
-                    //mark origin
-                    odFile << "\"type\" : \"Feature\"," << std::endl;
-                    odFile << "\"properties\" : {\"stroke\" : \"#" << "000000" << "\" } ," << std::endl;
-
-                    odFile << "\"geometry\" : {\"type\":\"Point\",\"coordinates\":" << std::endl;
-                    odFile << "["<< inputGraph.LatLngAttribute::latLng(origin).lngInDeg() << ","
-                    << inputGraph.LatLngAttribute::latLng(origin).latInDeg() << "]";
-
-                    odFile << "}}]}";
-
-                }
-
-
-
-                mark = -1;
-
-            }*/
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       // Assign flow to the edges on the computed paths.
       for (auto i = 0; i < k; ++i) {
@@ -167,27 +85,12 @@ class CCHAdapter {
 
 
        //analyses flow information of each od-pair
-
             for(int i = 0; i < k; ++i) {
 
-                std::vector<int32_t> path;
+                std::vector<int32_t>& path = *(firstODPath + i);
                 CHPathUnpacker unpacker(minimumWeightedCH);
                 unpacker.unpackUpDownPath(search.getUpEdgePath(i), search.getDownEdgePath(i), path);
-                if (path.size() > 0) {
-                    int ori = minimumWeightedCH.contractionOrder(sources[i]);
-                    int des = minimumWeightedCH.contractionOrder(targets[i]);
-                    std::string key = std::to_string(ori) + "," + std::to_string(des);
-                    odPairPath[key] = path;
-                }
-
-
             }
-
-
-
-
-
-
     }
 
     // Returns the length of the i-th shortest path.

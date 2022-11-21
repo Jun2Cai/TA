@@ -8,7 +8,7 @@
 #include <iostream>
 #include <ostream>
 #include <vector>
-#include "Algorithms/TrafficAssignment/MeasureBehavior/Measurebehavior.h"
+#include "Algorithms/TrafficAssignment/MeasureBehavior/MeasureBehavior.h"
 #include "Algorithms/TrafficAssignment/Measurement/StaticalFunction.h"
 #include "DataStructures/Utilities/OriginDestination.h"
 #include "Stats/TrafficAssignment/AllOrNothingAssignmentStats.h"
@@ -20,162 +20,120 @@
 // turn and the corresponding OD flow (in our case always a single flow unit) is assigned to each
 // edge on the shortest path between O and D. Other O-D paths are not assigned any flow. The
 // procedure can be used with different shortest-path algorithms.
-template <typename ShortestPathAlgoT>
+template<typename ShortestPathAlgoT>
 class AllOrNothingAssignment {
- private:
-  using InputGraph = typename ShortestPathAlgoT::InputGraph;
+private:
+    using InputGraph = typename ShortestPathAlgoT::InputGraph;
 
- public:
-  // Constructs an all-or-nothing assignment instance.
-  AllOrNothingAssignment(const InputGraph& graph,
-                         const std::vector<ClusteredOriginDestination>& odPairs,
-                         const bool verbose = true)
-      : stats(odPairs.size()),
-        shortestPathAlgo(graph),
-        inputGraph(graph),
-        odPairs(odPairs),
-        verbose(verbose) {
-    Timer timer;
-    shortestPathAlgo.preprocess();
-    stats.totalPreprocessingTime = timer.elapsed();
-    stats.lastRoutingTime = stats.totalPreprocessingTime;
-    stats.totalRoutingTime = stats.totalPreprocessingTime;
-    if (verbose) std::cout << "  Prepro: " << stats.totalPreprocessingTime << "ms" << std::endl;
-  }
+public:
+    // Constructs an all-or-nothing assignment instance.
+    AllOrNothingAssignment(const InputGraph &graph,
+                           const std::vector<ClusteredOriginDestination> &odPairs,
+                           const bool verbose = true)
+            : stats(odPairs.size()),
+              shortestPathAlgo(graph),
+              inputGraph(graph),
+              odPairs(odPairs),
+              verbose(verbose),
+              odPairPaths(odPairs.size()) {
+        Timer timer;
+        shortestPathAlgo.preprocess();
+        stats.totalPreprocessingTime = timer.elapsed();
+        stats.lastRoutingTime = stats.totalPreprocessingTime;
+        stats.totalRoutingTime = stats.totalPreprocessingTime;
+        if (verbose) std::cout << "  Prepro: " << stats.totalPreprocessingTime << "ms" << std::endl;
+    }
 
-  // Assigns all OD flows to their currently shortest paths.
-  void run(const int skipInterval = 1, int origin = 0, int destination = 0, int output = 0,std::string fileName = "") {
-    Timer timer;
-    ++stats.numIterations;
-    if (verbose) std::cout << "Iteration " << stats.numIterations << ": " << std::flush;
-    shortestPathAlgo.customize();
-    stats.lastCustomizationTime = timer.elapsed();
-    std::map<std::string, std::vector<int32_t>> odPairPath;
-    timer.restart();
-    ProgressBar bar(std::ceil(1.0 * odPairs.size() / (K * skipInterval)), verbose);
-    trafficFlows.assign(inputGraph.numEdges(), 0);
-    stats.startIteration();
-    auto totalNumPairsSampledBefore = 0;
-    #pragma omp parallel
-    {
-      auto queryAlgo = shortestPathAlgo.getQueryAlgoInstance();
-      auto checksum = int64_t{0};
-      auto prevMinPathCost = int64_t{0};
-      auto avgChange = 0.0;
-      auto maxChange = 0.0;
-      auto numPairsSampledBefore = 0;
+    // Assigns all OD flows to their currently shortest paths.
+    void run(const int skipInterval = 1, int odPairIdForDetailedOutput = -1, int output = 0, std::string fileName = "") {
+        unused(output, fileName);
+        Timer timer;
+        ++stats.numIterations;
+        if (verbose) std::cout << "Iteration " << stats.numIterations << ": " << std::flush;
+        shortestPathAlgo.customize();
+        stats.lastCustomizationTime = timer.elapsed();
+        initOdPairPaths();
+        timer.restart();
+        ProgressBar bar(std::ceil(1.0 * odPairs.size() / (K * skipInterval)), verbose);
+        trafficFlows.assign(inputGraph.numEdges(), 0);
+        stats.startIteration();
+        auto totalNumPairsSampledBefore = 0;
+#pragma omp parallel default(none) shared(odPairs, stats, odPairPaths, skipInterval, bar, totalNumPairsSampledBefore)
+        {
+            auto queryAlgo = shortestPathAlgo.getQueryAlgoInstance();
+            auto checksum = int64_t{0};
+            auto prevMinPathCost = int64_t{0};
+            auto avgChange = 0.0;
+            auto maxChange = 0.0;
+            auto numPairsSampledBefore = 0;
 
-      #pragma omp for schedule(dynamic, 64) nowait
-      for (auto i = 0; i < odPairs.size(); i += K * skipInterval) {
-        // Run multiple shortest-path computations simultaneously.
-        std::array<int, K> sources;
-        std::array<int, K> targets;
-        sources.fill(odPairs[i].origin);
-        targets.fill(odPairs[i].destination);
-        auto k = 1;
-        for (; k < K && i + k * skipInterval < odPairs.size(); ++k) {
-          sources[k] = odPairs[i + k * skipInterval].origin;
-          targets[k] = odPairs[i + k * skipInterval].destination;
+#pragma omp for schedule(dynamic, 64) nowait
+            for (auto i = 0; i < odPairs.size(); i += K * skipInterval) {
+                // Run multiple shortest-path computations simultaneously.
+                std::array<int, K> sources;
+                std::array<int, K> targets;
+                sources.fill(odPairs[i].origin);
+                targets.fill(odPairs[i].destination);
+                auto k = 1;
+                for (; k < K && i + k * skipInterval < odPairs.size(); ++k) {
+                    sources[k] = odPairs[i + k * skipInterval].origin;
+                    targets[k] = odPairs[i + k * skipInterval].destination;
+                }
+                queryAlgo.run(sources, targets, k, odPairPaths.begin() + i);
+
+
+                for (auto j = 0; j < k; ++j) {
+                    // Maintain the avg and max change in the OD distances between the last two iterations.
+                    const auto dst = odPairs[i + j * skipInterval].destination;
+                    const auto dist = queryAlgo.getDistance(dst, j);
+                    const auto prevDist = stats.lastDistances[i + j * skipInterval];
+                    const auto change = 1.0 * std::abs(dist - prevDist) / prevDist;
+                    numPairsSampledBefore += prevDist != -1;
+                    checksum += dist;
+                    prevMinPathCost += prevDist != -1 ? dist : 0;
+                    stats.lastDistances[i + j * skipInterval] = dist;
+                    avgChange += std::max(0.0, change);
+                    maxChange = std::max(maxChange, change);
+                }
+                ++bar;
+            }
+
+#pragma omp critical (combineResults)
+            {
+                queryAlgo.addLocalToGlobalFlows();
+                stats.lastChecksum += checksum;
+                stats.prevMinPathCost += prevMinPathCost;
+                stats.avgChangeInDistances += avgChange;
+                stats.maxChangeInDistances = std::max(stats.maxChangeInDistances, maxChange);
+                totalNumPairsSampledBefore += numPairsSampledBefore;
+            }
+
         }
-        queryAlgo.run(sources, targets, k, odPairPath);
+        bar.finish();
 
+        shortestPathAlgo.propagateFlowsToInputEdges(trafficFlows);
+        std::for_each(trafficFlows.begin(), trafficFlows.end(), [&](int &f) { f *= skipInterval; });
+        stats.lastQueryTime = timer.elapsed();
+        stats.avgChangeInDistances /= totalNumPairsSampledBefore;
+        stats.finishIteration();
 
-
-
-
-
-
-
-
-        for (auto j = 0; j < k; ++j) {
-          // Maintain the avg and max change in the OD distances between the last two iterations.
-          const auto dst = odPairs[i + j * skipInterval].destination;
-          const auto dist = queryAlgo.getDistance(dst, j);
-          const auto prevDist = stats.lastDistances[i + j * skipInterval];
-          const auto change = 1.0 * std::abs(dist - prevDist) / prevDist;
-          numPairsSampledBefore += prevDist != -1;
-          checksum += dist;
-          prevMinPathCost += prevDist != -1 ? dist : 0;
-          stats.lastDistances[i + j * skipInterval] = dist;
-          avgChange += std::max(0.0, change);
-          maxChange = std::max(maxChange, change);
+        if (odPairIdForDetailedOutput >= 0) {
+            const auto &odPairForDetailedOutput = odPairs[odPairIdForDetailedOutput];
+            auto odFileName = fileName + "_" + std::to_string(odPairForDetailedOutput.origin) + "_" +
+                              std::to_string(odPairForDetailedOutput.destination) + "_" +
+                              std::to_string(stats.numIterations);
+            outputOdPairPath(odPairIdForDetailedOutput, odFileName);
         }
-        ++bar;
-      }
 
-      #pragma omp critical (combineResults)
-      {
-        queryAlgo.addLocalToGlobalFlows();
-        stats.lastChecksum += checksum;
-        stats.prevMinPathCost += prevMinPathCost;
-        stats.avgChangeInDistances += avgChange;
-        stats.maxChangeInDistances = std::max(stats.maxChangeInDistances, maxChange);
-        totalNumPairsSampledBefore += numPairsSampledBefore;
-      }
-
+        if (verbose) {
+            std::cout << " done.\n";
+            std::cout << "  Checksum: " << stats.lastChecksum;
+            std::cout << "  Custom: " << stats.lastCustomizationTime << "ms";
+            std::cout << "  Queries: " << stats.lastQueryTime << "ms";
+            std::cout << "  Routing: " << stats.lastRoutingTime << "ms\n";
+            std::cout << std::flush;
+        }
     }
-    bar.finish();
-
-    shortestPathAlgo.propagateFlowsToInputEdges(trafficFlows); 
-    std::for_each(trafficFlows.begin(), trafficFlows.end(), [&](int& f) { f *= skipInterval; });
-    stats.lastQueryTime = timer.elapsed();
-    stats.avgChangeInDistances /= totalNumPairsSampledBefore;
-    stats.finishIteration();
-    output++;
-    output--;
-    //test
-/*    std::vector<int> test = {0,1,3,2,4,5,6,7,8,9,10};
-    auto testValue = StaticalFunction::weightedQuantile(test, inputGraph, trafficFlows);
-    for (int i = 0; i < 11; i++) {
-        std::cout << "flow " << trafficFlows[i] << std::endl;
-    }
-
-      for (int i = 0; i < 11; i++) {
-          std::cout << "time " << inputGraph.travelTime(i) << std::endl;
-      }
-    for(auto v : testValue) {
-        std::cout << "quantia" << v << std::endl;
-    }*/
-
-     //junjunjun
-     Measurebehavior measures;
-     if (output == 1 ) {
-             std::string iteration;
-         if (stats.numIterations == 1) {
-             iteration = "first";
-         } else {
-             iteration = "last";
-         }
-         auto anaFileName = fileName + "_measure";
-
-         measures.measures(anaFileName, odPairPath,inputGraph, trafficFlows, stats.numIterations);
-
-
-     }
-
-
-    auto odFileName = fileName + "_" + std::to_string(origin) + "_" + std::to_string(destination) + "_" + std::to_string(stats.numIterations);
-      outputOdPairPath(origin, destination,odFileName, odPairPath);
-
-
-
-
-
-
-    if (verbose) {
-      std::cout << " done.\n";
-      std::cout << "  Checksum: " << stats.lastChecksum;
-      std::cout << "  Custom: " << stats.lastCustomizationTime << "ms";
-      std::cout << "  Queries: " << stats.lastQueryTime << "ms";
-      std::cout << "  Routing: " << stats.lastRoutingTime << "ms\n";
-      std::cout << std::flush;
-    }
-
-
-
-
-
-  }
 
 /*
   void meanMeasure(std::string anaFileName,std::map<std::string, std::vector<int32_t>> odPairPath) {
@@ -314,77 +272,88 @@ class AllOrNothingAssignment {
         }
   }*/
 
-  void outputOdPairPath(int origin, int destination, std::string fileName, std::map<std::string, std::vector<int32_t>> odPairPath) {
-      auto key = std::to_string(origin)+","+std::to_string(destination);
-      if (odPairPath.count(key) > 0) {
-          std::vector<int32_t> path = odPairPath[key];
-          if (path.size() > 0) {
+    void outputOdPairPath(const int odPairId, const std::string &fileName) {
+        const auto &odPair = odPairs[odPairId];
+        std::vector<int32_t> path = odPairPaths[odPairId];
+        if (path.size() > 0) {
 
-              //outputs origin-destination path in json-file
-              std::ofstream odFile;
-              auto odFileName =
-                      fileName + ".json";
+            //outputs origin-destination path in json-file
+            std::ofstream odFile;
+            auto odFileName =
+                    fileName + ".json";
 
-              odFile.open(odFileName);
-              odFile << "{\"type\" : \"FeatureCollection\" ," << std::endl;
-              odFile << "\"features\" : [{" << std::endl;
-              odFile << "\"type\" : \"Feature\"," << std::endl;
-              odFile << "\"properties\" : {\"stroke\" : \"#" << "FF0000" << "\" } ," << std::endl;
+            odFile.open(odFileName);
+            odFile << "{\"type\" : \"FeatureCollection\" ," << std::endl;
+            odFile << "\"features\" : [{" << std::endl;
+            odFile << "\"type\" : \"Feature\"," << std::endl;
+            odFile << "\"properties\" : {\"stroke\" : \"#" << "FF0000" << "\" } ," << std::endl;
 
-              odFile << "\"geometry\" : {\"type\":\"MultiLineString\",\"coordinates\":" << std::endl;
-              odFile << "[";
-              odFile << "[[" << inputGraph.LatLngAttribute::latLng(origin).lngInDeg() << ","
-                     << inputGraph.LatLngAttribute::latLng(origin).latInDeg() << "],";
-              odFile <<"["<<inputGraph.LatLngAttribute::latLng(inputGraph.edgeHead(path.front())).lngInDeg() << ","
-                     << inputGraph.LatLngAttribute::latLng(inputGraph.edgeHead(path.front())).latInDeg() << "]]";
-              for (int i = 0; i < path.size() - 1; i++) {
-                  int tail = inputGraph.edgeHead(path.at(i));
-                  int head = inputGraph.edgeHead(path.at(i+1));
-                  odFile <<", " << "[[" << inputGraph.LatLngAttribute::latLng(tail).lngInDeg() << ","
-                         << inputGraph.LatLngAttribute::latLng(tail).latInDeg() << "], ";
-                  odFile <<"[" << inputGraph.LatLngAttribute::latLng(head).lngInDeg() << ","
-                         << inputGraph.LatLngAttribute::latLng(head).latInDeg() << "]] ";
+            odFile << "\"geometry\" : {\"type\":\"MultiLineString\",\"coordinates\":" << std::endl;
+            odFile << "[";
+            odFile << "[[" << inputGraph.LatLngAttribute::latLng(odPair.origin).lngInDeg() << ","
+                   << inputGraph.LatLngAttribute::latLng(odPair.origin).latInDeg() << "],";
+            odFile << "[" << inputGraph.LatLngAttribute::latLng(inputGraph.edgeHead(path.front())).lngInDeg() << ","
+                   << inputGraph.LatLngAttribute::latLng(inputGraph.edgeHead(path.front())).latInDeg() << "]]";
+            for (int i = 0; i < path.size() - 1; i++) {
+                int tail = inputGraph.edgeHead(path.at(i));
+                int head = inputGraph.edgeHead(path.at(i + 1));
+                odFile << ", " << "[[" << inputGraph.LatLngAttribute::latLng(tail).lngInDeg() << ","
+                       << inputGraph.LatLngAttribute::latLng(tail).latInDeg() << "], ";
+                odFile << "[" << inputGraph.LatLngAttribute::latLng(head).lngInDeg() << ","
+                       << inputGraph.LatLngAttribute::latLng(head).latInDeg() << "]] ";
 
-              }
+            }
 
-              odFile << "] }} , { ";
-              //mark origin
-              odFile << "\"type\" : \"Feature\"," << std::endl;
-              odFile << "\"properties\" : {\"stroke\" : \"#" << "000000" << "\" } ," << std::endl;
+            odFile << "] }} , { ";
+            //mark origin
+            odFile << "\"type\" : \"Feature\"," << std::endl;
+            odFile << "\"properties\" : {\"stroke\" : \"#" << "000000" << "\" } ," << std::endl;
 
-              odFile << "\"geometry\" : {\"type\":\"Point\",\"coordinates\":" << std::endl;
-              odFile << "["<< inputGraph.LatLngAttribute::latLng(origin).lngInDeg() << ","
-                     << inputGraph.LatLngAttribute::latLng(origin).latInDeg() << "]";
+            odFile << "\"geometry\" : {\"type\":\"Point\",\"coordinates\":" << std::endl;
+            odFile << "[" << inputGraph.LatLngAttribute::latLng(odPair.origin).lngInDeg() << ","
+                   << inputGraph.LatLngAttribute::latLng(odPair.origin).latInDeg() << "]";
 
-              odFile << "}}]}";
+            odFile << "}}]}";
 
-          }
-          }
-      }
+        }
+    }
 
 
+    void initOdPairPaths() {
+        for (auto &path: odPairPaths) {
+            path.resize(0);
+        }
+    }
 
 
+    // Returns the traffic flow on edge e.
+    const int &trafficFlowOn(const int e) const {
+        assert(e >= 0);
+        assert(e < inputGraph.numEdges());
+        return trafficFlows[e];
+    }
 
+    AllOrNothingAssignmentStats stats; // Statistics about the execution.
 
+private:
 
-  // Returns the traffic flow on edge e.
-  const int& trafficFlowOn(const int e) const {
-    assert(e >= 0); assert(e < inputGraph.numEdges());
-    return trafficFlows[e];
-  }
+    template<
+            template<typename> class,
+            template<typename> class,
+            template<typename, typename> class, typename>
+    friend
+    class FrankWolfeAssignment;
 
-  AllOrNothingAssignmentStats stats; // Statistics about the execution.
+    // The maximum number of simultaneous shortest-path computations.
+    static constexpr int K = ShortestPathAlgoT::K;
 
- private:
-  // The maximum number of simultaneous shortest-path computations.
-  static constexpr int K = ShortestPathAlgoT::K;
+    using ODPairs = std::vector<ClusteredOriginDestination>;
 
-  using ODPairs = std::vector<ClusteredOriginDestination>;
+    ShortestPathAlgoT shortestPathAlgo; // Algorithm computing shortest paths between OD pairs.
+    const InputGraph &inputGraph;       // The input graph.
+    const ODPairs &odPairs;             // The OD pairs to be assigned onto the graph.
+    AlignedVector<int> trafficFlows;    // The traffic flows on the edges.
+    const bool verbose;                 // Should informative messages be displayed?
 
-  ShortestPathAlgoT shortestPathAlgo; // Algorithm computing shortest paths between OD pairs.
-  const InputGraph& inputGraph;       // The input graph.
-  const ODPairs& odPairs;             // The OD pairs to be assigned onto the graph.
-  AlignedVector<int> trafficFlows;    // The traffic flows on the edges.
-  const bool verbose;                 // Should informative messages be displayed?
+    std::vector<std::vector<int32_t>> odPairPaths;
 };

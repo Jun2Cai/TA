@@ -37,7 +37,8 @@ public:
               pointOfSight(graph.numEdges()),
               traversalCostFunction(graph, alpha, beta, scale),
               objFunction(traversalCostFunction),
-              verbose(verbose) {
+              verbose(verbose),
+              measures(graph, odPairs) {
         assert(graph.isDefrag());
         stats.totalRunningTime = aonAssignment.stats.totalRoutingTime;
     }
@@ -45,12 +46,13 @@ public:
     // Assigns all OD flows onto the graph.
     void run(
             std::ofstream& flowFile, std::ofstream& distFile, std::ofstream& statFile,
-            const int numIterations = 0, const bool outputIntermediates = false, std::string fileName = "", int origin = 0, int destination = 0) {
+            const int numIterations = 0, const bool outputIntermediates = false, std::string fileName = "", int odPairIdForDetailedOutput = 0) {
         assert(numIterations >= 0);
         Timer timer;
 
         auto prevSkipInterval = 1u;
-        determineInitialSolution(prevSkipInterval, origin, destination, 1, fileName);
+        determineInitialSolution(prevSkipInterval, odPairIdForDetailedOutput, 1, fileName);
+        measures.measureFirstIteration(aonAssignment.odPairPaths, aonAssignment.trafficFlows);
         //chuanyigeODPAIRPATH,ranhou Measure a = new PercentageOfDifferentSat,a.measure() measureliyou InputGraph
 
        // auto firstFileName = fileName + "_first";
@@ -99,7 +101,7 @@ public:
             updateTraversalCosts();
 
             int output = (numIterations == (aonAssignment.stats.numIterations + 1)) ;
-            findDescentDirection(skipInterval, origin, destination, output, fileName);
+            findDescentDirection(skipInterval, odPairIdForDetailedOutput, output, fileName);
             const auto tau = findMoveSize();
             moveAlongDescentDirection(tau);
             const auto prevMinPathCost = aonAssignment.stats.prevMinPathCost * prevSkipInterval;
@@ -142,7 +144,7 @@ public:
             }
 
             if( sameGapCount > 2 ||stats.prevRelGap <= 0) {
-                findDescentDirection(skipInterval, origin, destination, 1, fileName);
+                findDescentDirection(skipInterval, odPairIdForDetailedOutput, 1, fileName);
                 break;
             } else {
                 if (prevRelGapTemp == stats.prevRelGap) {
@@ -152,9 +154,10 @@ public:
 
 
             }
-
-
         }
+
+        auto anaFileName = fileName + "_measure";
+        measures.measureLastIterationAndWriteOutput(aonAssignment.odPairPaths, aonAssignment.trafficFlows, anaFileName);
 
         if (flowFile.is_open() && !outputIntermediates)
             FORALL_EDGES(graph, e) {
@@ -274,13 +277,13 @@ public:
 
 private:
     // Determines the initial solution.
-    void determineInitialSolution(const int skipInterval, int origin = 0, int destination = 0, int output = 1,std::string fileName = "") {
+    void determineInitialSolution(const int skipInterval, int odPairIdForDetailedOutput = 0, int output = 1,std::string fileName = "") {
 #pragma omp parallel for schedule(static)
         FORALL_EDGES(graph, e) {
             graph.traversalCost(e) = objFunction.derivative(e, 0);
 
         }
-        aonAssignment.run(skipInterval, origin, destination, output, fileName);
+        aonAssignment.run(skipInterval, odPairIdForDetailedOutput, output, fileName);
 #pragma omp parallel for schedule(static)
         FORALL_EDGES(graph, e)
             trafficFlows[e] = aonAssignment.trafficFlowOn(e);
@@ -302,8 +305,8 @@ private:
     }
 
     // Finds the descent direction.
-    void findDescentDirection(const int skipInterval, int origin = 0, int destination = 0, int output = 0,std::string fileName = "") {
-        aonAssignment.run(skipInterval, origin, destination, output, fileName);
+    void findDescentDirection(const int skipInterval, int odPairIdForDetailedOutput = 0, int output = 0,std::string fileName = "") {
+        aonAssignment.run(skipInterval, odPairIdForDetailedOutput, output, fileName);
 #ifndef TA_NO_CFW
         if (aonAssignment.stats.numIterations == 2) {
             FORALL_EDGES(graph, e)
@@ -367,6 +370,8 @@ private:
     TraversalCostFunction traversalCostFunction; // A functor returning the traversal cost of an edge.
     ObjFunction objFunction;                     // The objective function to be minimized (UE or SO).
     const bool verbose;                          // Should informative messages be displayed?
+
+    MeasureBehavior<Graph> measures; // used to calculate quality measure on result
 };
 
 // An alias template for a user-equilibrium (UE) traffic assignment.
