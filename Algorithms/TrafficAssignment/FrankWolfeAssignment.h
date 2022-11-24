@@ -55,12 +55,12 @@ public:
         measures.measureFirstIteration(aonAssignment.odPairPaths, aonAssignment.trafficFlows);
         //chuanyigeODPAIRPATH,ranhou Measure a = new PercentageOfDifferentSat,a.measure() measureliyou InputGraph
 
-       // auto firstFileName = fileName + "_first";
-      //  outputEdges(0,0.2,"F7DC93",firstFileName);
-     //   outputEdges(0.2,0.4,"ECB221",firstFileName);
-     //   outputEdges(0.4,0.6,"FFB833",firstFileName);
-    //    outputEdges(0.6,0.8,"D00CAF",firstFileName);
-     //   outputEdges(0.8,100,"FF0000",firstFileName);
+        auto firstFileName = fileName + "_first";
+        outputEdges(0,0.2,"F7DC93",firstFileName);
+        outputEdges(0.2,0.4,"ECB221",firstFileName);
+        outputEdges(0.4,0.6,"FFB833",firstFileName);
+        outputEdges(0.6,0.8,"D00CAF",firstFileName);
+        outputEdges(0.8,100,"FF0000",firstFileName);
         stats.lastRunningTime = timer.elapsed();
         stats.lastLineSearchTime = stats.lastRunningTime - aonAssignment.stats.lastRoutingTime;
         stats.finishIteration();
@@ -184,12 +184,12 @@ public:
             std::cout << std::flush;
         }
 
-      //  auto lastFileName = fileName + "_last";
-     //   outputEdges(0,0.2,"F7DC93",lastFileName);
-     //   outputEdges(0.2,0.4,"ECB221",lastFileName);
-     //   outputEdges(0.4,0.6,"FFB833",lastFileName);
-      //  outputEdges(0.6,0.8,"D00CAF",lastFileName);
-     //   outputEdges(0.8,100,"FF0000",lastFileName);
+        auto lastFileName = fileName + "_last";
+        outputEdges(0,0.2,"F7DC93",lastFileName);
+        outputEdges(0.2,0.4,"ECB221",lastFileName);
+        outputEdges(0.4,0.6,"FFB833",lastFileName);
+        outputEdges(0.6,0.8,"D00CAF",lastFileName);
+        outputEdges(0.8,100,"FF0000",lastFileName);
 
 
 
