@@ -16,7 +16,6 @@
 template<typename InputGraph>
 class QuantileRatio : public IMeasure {
 public :
-
     explicit QuantileRatio(const InputGraph &inputGraph, const std::vector<ClusteredOriginDestination> &odPairs)
             : inputGraph(inputGraph), odPairs(odPairs), quanInFstIter(odPairs.size()) {}
 
@@ -25,6 +24,7 @@ public :
         for (int i = 0; i < odPairs.size(); ++i) {
             const auto &path = odPairPaths[i];
             quanInFstIter[i] = StaticalFunction::weightedQuantile(path, inputGraph, trafficFlows);
+
         }
     }
 
@@ -48,10 +48,14 @@ public :
                    (!path.empty() && quanInFstIter[i] != StaticalFunction::Quantiles()));
             odAnaFile << std::to_string(odPairs[i].origin) << "," << std::to_string(odPairs[i].destination) << ",";
 
+            const auto &quantilesAtFirstIter = quanInFstIter[i];
+            const auto &quantilesAtLastIter = StaticalFunction::weightedQuantile(path, inputGraph,
+                                                                                 trafficFlows);
+            odAnaFile << static_cast<double>(quantilesAtFirstIter.q0) << ", " << static_cast<double>(quantilesAtFirstIter.q25) << ", "
+                      << static_cast<double>(quantilesAtFirstIter.q50) << ", "<< static_cast<double>(quantilesAtFirstIter.q75) << ", "<< static_cast<double>(quantilesAtFirstIter.q100) << ", , "
+                      << static_cast<double>(quantilesAtLastIter.q0) << ", " << static_cast<double>(quantilesAtLastIter.q25) << ", "
+                      << static_cast<double>(quantilesAtLastIter.q50) << ", "<< static_cast<double>(quantilesAtLastIter.q75) << ", "<< static_cast<double>(quantilesAtLastIter.q100) << ", , ";
             if (!path.empty()) {
-                const auto &quantilesAtFirstIter = quanInFstIter[i];
-                const auto &quantilesAtLastIter = StaticalFunction::weightedQuantile(path, inputGraph,
-                                                                                     trafficFlows);
                 double ratioMin =
                         static_cast<double>(quantilesAtLastIter.q0) / static_cast<double>(quantilesAtFirstIter.q0);
                 double ratio25 = static_cast<double>(quantilesAtLastIter.q25) /
@@ -67,6 +71,7 @@ public :
                 sum50 += ratio50;
                 sum75 += ratio75;
                 sumMax += ratioMax;
+
                 odAnaFile << ratioMin << ", " << ratio25 << ", " << ratio50 << ", " << ratio75 << ", " << ratioMax
                           << "\n";
             } else {
