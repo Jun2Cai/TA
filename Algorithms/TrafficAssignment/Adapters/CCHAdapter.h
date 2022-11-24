@@ -61,8 +61,7 @@ class CCHAdapter {
       }*/
 
     // Computes shortest paths from each source to its target simultaneously.
-    template<typename ODPathIteratorT>
-    void run(std::array<int, K>& sources, std::array<int, K>& targets, const int k, const ODPathIteratorT& firstODPath) {
+    void run(std::array<int, K>& sources, std::array<int, K>& targets, const int k) {
 
        // Run a centralized CH search.
       for (auto i = 0; i < K; ++i) {
@@ -82,15 +81,6 @@ class CCHAdapter {
           ++localFlowsOnDownEdges[e];
         }
       }
-
-
-       //analyses flow information of each od-pair
-            for(int i = 0; i < k; ++i) {
-
-                std::vector<int32_t>& path = *(firstODPath + i);
-                CHPathUnpacker unpacker(minimumWeightedCH);
-                unpacker.unpackUpDownPath(search.getUpEdgePath(i), search.getDownEdgePath(i), path);
-            }
     }
 
     // Returns the length of the i-th shortest path.
@@ -106,6 +96,10 @@ class CCHAdapter {
         flowsOnDownEdges[e] += localFlowsOnDownEdges[e];
     }
 
+    void getPathFromLastRun(std::vector<int32_t>& path, int i = 0) {
+        CHPathUnpacker unpacker(minimumWeightedCH);
+        unpacker.unpackUpDownPath(search.getUpEdgePath(i), search.getDownEdgePath(i), path);
+    }
 
 
 
