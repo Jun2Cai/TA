@@ -1,4 +1,4 @@
-add_executable(AssignTraffic AssignTraffic.cc)
+add_executable(AssignTraffic AssignTraffic.cc ../Algorithms/TrafficAssignment/Measurement/LongestSubPath.h ../Algorithms/TrafficAssignment/Measurement/QuantileDistribution.h)
 target_compile_definitions(AssignTraffic PRIVATE CSV_IO_NO_THREAD)
 target_link_libraries(AssignTraffic ${RoutingKit_LIBRARY})
 if(OpenMP_FOUND)

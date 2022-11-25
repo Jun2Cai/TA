@@ -8,6 +8,7 @@
 
 #include "Algorithms/TrafficAssignment/Measurement/CompareTravelTime.h"
 #include "Algorithms/TrafficAssignment/Measurement/QuantileRatio.h"
+#include "Algorithms/TrafficAssignment/Measurement/LongestSubPath.h"
 
 
 template<typename InputGraph>
@@ -15,19 +16,22 @@ class MeasureBehavior {
 
 public:
 
-    explicit MeasureBehavior(const InputGraph& inputGraph, const std::vector<ClusteredOriginDestination>& odPairs) : quantileRatio(inputGraph, odPairs) {}
+    explicit MeasureBehavior(const InputGraph& inputGraph, const std::vector<ClusteredOriginDestination>& odPairs) : quantileRatio(inputGraph, odPairs), longestSubPath(inputGraph, odPairs) {}
 
     void measureFirstIteration(const std::vector<std::vector<int32_t>>& odPairPaths, const AlignedVector<int>& trafficFlows) {
         quantileRatio.measureFirstIteration(odPairPaths, trafficFlows);
+        longestSubPath.measureFirstIteration(odPairPaths, trafficFlows);
     }
 
     void measureLastIterationAndWriteOutput(const std::vector<std::vector<int32_t>>& odPairPaths, const AlignedVector<int>& trafficFlows, const std::string& anaFileName) {
         quantileRatio.measureLastIterationAndWriteOutput(odPairPaths, trafficFlows, anaFileName);
+        longestSubPath.measureLastIterationAndWriteOutput(odPairPaths, trafficFlows, anaFileName);
     }
 
 private:
 
     QuantileRatio<InputGraph> quantileRatio;
+    LongestSubPath<InputGraph> longestSubPath;
 
 };
 

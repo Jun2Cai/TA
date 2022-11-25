@@ -41,6 +41,7 @@ public :
         odAnaFile.open(odAnaFileName);
         if (!odAnaFile.good())
             throw std::invalid_argument("file cannot be opened -- '" + odAnaFileName + "'");
+        odAnaFile << origin,destination,,first iteration,,,,,last iteration,,,,,ratio" <<std::endl;
 
         for (int i = 0; i < odPairs.size(); ++i) {
             const auto &path = odPairPaths[i];
@@ -81,7 +82,7 @@ public :
         odAnaFile.flush();
 
         const auto count = static_cast<double>(odPairs.size());
-        odAnaFile << "mean,," << sumMin / count * 1.0 << "," << sum25 / count * 1.0 << "," << sum50 / count * 1.0 << ","
+        odAnaFile << ",,,,,,,,,,,,mean,,,,,,,,,,,,,," << sumMin / count * 1.0 << "," << sum25 / count * 1.0 << "," << sum50 / count * 1.0 << ","
                   << sum75 / count * 1.0 << "," << sumMax / count * 1.0 << std::endl;
     }
 
