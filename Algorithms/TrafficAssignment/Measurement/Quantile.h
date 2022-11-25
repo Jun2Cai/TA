@@ -2,10 +2,8 @@
 // Created by junjun on 19.11.22.
 //
 
-#ifndef ROUTINGFRAMEWORK_QUANTILERATIO_H
-#define ROUTINGFRAMEWORK_QUANTILERATIO_H
-
-#include "Algorithms/TrafficAssignment/Measurement/IMeasure.h"
+#ifndef ROUTINGFRAMEWORK_QUANTILE_H
+#define ROUTINGFRAMEWORK_QUANTILE_H
 #include "Algorithms/TrafficAssignment/Measurement/StaticalFunction.h"
 #include "Tools/Simd/AlignedVector.h"
 #include "DataStructures/Utilities/OriginDestination.h"
@@ -14,9 +12,9 @@
 #include <iostream>
 
 template<typename InputGraph>
-class QuantileRatio : public IMeasure {
+class Quantile {
 public :
-    explicit QuantileRatio(const InputGraph &inputGraph, const std::vector<ClusteredOriginDestination> &odPairs)
+    explicit Quantile(const InputGraph &inputGraph, const std::vector<ClusteredOriginDestination> &odPairs)
             : inputGraph(inputGraph), odPairs(odPairs), quanInFstIter(odPairs.size()) {}
 
     void measureFirstIteration(const std::vector<std::vector<int32_t>> &odPairPaths,
@@ -36,12 +34,12 @@ public :
         double sum75 = 0;
         double sumMax = 0;
 
-        auto odAnaFileName = anaFileName + "_QuantileRatio.csv";
+        auto odAnaFileName = anaFileName + "_quantile.csv";
         std::ofstream odAnaFile;
         odAnaFile.open(odAnaFileName);
         if (!odAnaFile.good())
             throw std::invalid_argument("file cannot be opened -- '" + odAnaFileName + "'");
-        odAnaFile << origin,destination,,first iteration,,,,,last iteration,,,,,ratio" <<std::endl;
+        odAnaFile << "origin,destination,,first iteration,,,,,last iteration,,,,,,ratio" <<std::endl;
 
         for (int i = 0; i < odPairs.size(); ++i) {
             const auto &path = odPairPaths[i];
@@ -52,7 +50,7 @@ public :
             const auto &quantilesAtFirstIter = quanInFstIter[i];
             const auto &quantilesAtLastIter = StaticalFunction::weightedQuantile(path, inputGraph,
                                                                                  trafficFlows);
-            odAnaFile << static_cast<double>(quantilesAtFirstIter.q0) << ", " << static_cast<double>(quantilesAtFirstIter.q25) << ", "
+            odAnaFile << ", " << static_cast<double>(quantilesAtFirstIter.q0) << ", " << static_cast<double>(quantilesAtFirstIter.q25) << ", "
                       << static_cast<double>(quantilesAtFirstIter.q50) << ", "<< static_cast<double>(quantilesAtFirstIter.q75) << ", "<< static_cast<double>(quantilesAtFirstIter.q100) << ", , "
                       << static_cast<double>(quantilesAtLastIter.q0) << ", " << static_cast<double>(quantilesAtLastIter.q25) << ", "
                       << static_cast<double>(quantilesAtLastIter.q50) << ", "<< static_cast<double>(quantilesAtLastIter.q75) << ", "<< static_cast<double>(quantilesAtLastIter.q100) << ", , ";
@@ -82,7 +80,7 @@ public :
         odAnaFile.flush();
 
         const auto count = static_cast<double>(odPairs.size());
-        odAnaFile << ",,,,,,,,,,,,mean,,,,,,,,,,,,,," << sumMin / count * 1.0 << "," << sum25 / count * 1.0 << "," << sum50 / count * 1.0 << ","
+        odAnaFile << ",,,,,,,,,,,,,,mean,"  << sumMin / count * 1.0 << "," << sum25 / count * 1.0 << "," << sum50 / count * 1.0 << ","
                   << sum75 / count * 1.0 << "," << sumMax / count * 1.0 << std::endl;
     }
 
@@ -95,4 +93,4 @@ private:
 };
 
 
-#endif //ROUTINGFRAMEWORK_QUANTILERATIO_H
+#endif //ROUTINGFRAMEWORK_QUANTILE_H

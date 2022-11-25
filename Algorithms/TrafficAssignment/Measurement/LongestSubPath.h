@@ -4,7 +4,6 @@
 
 #ifndef ROUTINGFRAMEWORK_LONGESTSUBPATH_H
 #define ROUTINGFRAMEWORK_LONGESTSUBPATH_H
-#include "Algorithms/TrafficAssignment/Measurement/IMeasure.h"
 #include "Algorithms/TrafficAssignment/Measurement/StaticalFunction.h"
 #include "Tools/Simd/AlignedVector.h"
 #include "DataStructures/Utilities/OriginDestination.h"
@@ -13,7 +12,7 @@
 #include <iostream>
 
 template<typename InputGraph>
-class LongestSubPath : public IMeasure {
+class LongestSubPath  {
 
 public :
     struct LongestSubPathOfDifferentQuantiles {
@@ -52,7 +51,7 @@ public :
         odAnaFile.open(odAnaFileName);
         if (!odAnaFile.good())
             throw std::invalid_argument("file cannot be opened -- '" + odAnaFileName + "'");
-        odAnaFile << "origin,destination,,first iteration,,,,,last iteration,,,,,ratio" << std::endl ;
+        odAnaFile << "origin,destination,,first iteration,,,,,last iteration,,,,,,ratio" << std::endl ;
         LongestSubPathOfDifferentQuantiles longestSubPathInLast;
 
         for (int i = 0; i < odPairs.size(); ++i) {
@@ -97,7 +96,7 @@ public :
         odAnaFile.flush();
 
         const auto count = static_cast<double>(odPairs.size());
-        odAnaFile << ",,,,,,,,,,,,mean,,,,,,,,,,,,,," << sumMin / count * 1.0 << "," << sum25 / count * 1.0 << "," << sum50 / count * 1.0 << ","
+        odAnaFile <<",,,,,,,,,,,,,,mean,"  << sumMin / count * 1.0 << "," << sum25 / count * 1.0 << "," << sum50 / count * 1.0 << ","
                   << sum75 / count * 1.0 << "," << sumMax / count * 1.0 << std::endl;
     }
 
@@ -108,12 +107,12 @@ private:
     std::vector<StaticalFunction::Quantiles> quanInFstIter;
     std::vector<LongestSubPathOfDifferentQuantiles> longestSubPathInFstIer;
 
-    int getLongestSubPath(const std::vector<int32_t> &path, const AlignedVector<int> &trafficFLows, const int threshold) {
+    int getLongestSubPath(const std::vector<int32_t> &path, const AlignedVector<int> &trafficFlows, const int threshold) {
         int max = 0;
         int tmpTraTime = 0;
         if (!path.empty()) {
             for (auto e : path) {
-                if (trafficFLows[e] >= threshold) {
+                if (trafficFlows[e] >= threshold) {
                     tmpTraTime += inputGraph.travelTime(e);
                     if (tmpTraTime > max) {
                         max  = tmpTraTime;
