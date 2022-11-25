@@ -171,7 +171,7 @@ inline void assignTraffic(const CommandLineParser& clp) {
     const auto useLengths = clp.isSet("l");
     const auto outputIntermediates = clp.isSet("i");
     const auto verbose = clp.isSet("v");
-    const auto analysisPeriod = clp.getValue<double>("p", 0);
+    const auto analysisPeriod = clp.getValue<double>("p", 1);
     const auto traversalCostFunction = clp.getValue<std::string>("f", "BPR");
     const auto shortestPathAlgorithm = clp.getValue<std::string>("a", "CCH");
     const auto ord = clp.getValue<std::string>("o", "sorted");

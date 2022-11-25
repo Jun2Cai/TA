@@ -59,42 +59,6 @@ public:
         stats.startIteration();
         auto totalNumPairsSampledBefore = 0;
 
-        // Compute lengths of OD-paths to allocate memory for storing the paths
-        std::vector<int> odPairPathLengths(odPairs.size());
-#pragma omp parallel default(none) shared(odPairs, odPairPathLengths, skipInterval)
-        {
-            auto queryAlgo = shortestPathAlgo.getQueryAlgoInstance();
-#pragma omp for schedule(dynamic, 64) nowait
-            for (auto i = 0; i < odPairs.size(); i +=K * skipInterval) {
-                // Run multiple shortest-path computations simultaneously.
-                std::array<int, K> sources;
-                std::array<int, K> targets;
-                sources.fill(odPairs[i].origin);
-                targets.fill(odPairs[i].destination);
-                auto k = 1;
-                for (; k < K && i + k * skipInterval < odPairs.size(); ++k) {
-                    sources[k] = odPairs[i + k * skipInterval].origin;
-                    targets[k] = odPairs[i + k * skipInterval].destination;
-                }
-
-                // Run queries once and extract path lengths for allocation of memory for paths
-                queryAlgo.run(sources, targets, k);
-
-                // Extract path lengths
-                for (int j = 0; j < k; ++j) {
-                    std::vector<int32_t> path;
-                    queryAlgo.getPathFromLastRun(path, j);
-                    odPairPathLengths[i + j] = path.size();
-                }
-            }
-        }
-
-        // Preallocate memory for each od path
-        for (int i = 0; i < odPairs.size(); ++i) {
-            odPairPaths[i].reserve(odPairPathLengths[i]);
-        }
-
-        // Actually compute od paths and update flows
 #pragma omp parallel default(none) shared(odPairs, stats, odPairPaths, skipInterval, bar, totalNumPairsSampledBefore)
         {
             auto queryAlgo = shortestPathAlgo.getQueryAlgoInstance();
